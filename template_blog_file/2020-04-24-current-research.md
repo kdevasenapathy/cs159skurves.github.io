@@ -8,9 +8,9 @@ tags:
 ---
 
 
-## Current Research
+## Foundational Research
 
-The current research aims to make a general algorithm that can learn to solve all types of different graph optimization problems, since many of these problems have a similar underlying structure.
+The seminal paper in this field is Dai et al.'s [Learning Combinatorial Optimization over Graphs](https://arxiv.org/pdf/1704.01665.pdf). The work aims to make a general algorithm that can learn to solve all types of different graph optimization problems, since many of these problems have a similar underlying structure.
 
 Since most graph optimization problems use a greedy algorithm, it would be great if ours did too. The only problem is that since we're trying to make an algorithm to solve *general* graph optimization problems, we need to find a way to learn an efficient heuristic for our optimization problem.
 
