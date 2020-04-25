@@ -8,13 +8,15 @@ tags:
 ---
 
 
-## Explanation of Current Research
+## Current Research
 
 The current research aims to make a general algorithm that can learn to solve all types of different graph optimization problems, since many of these problems have a similar underlying structure.
 
 Since most graph optimization problems use a greedy algorithm, it would be great if ours did too. The only problem is that since we're trying to make an algorithm to solve *general* graph optimization problems, we need to find a way to learn an efficient heuristic for our optimization problem.
 
-In comes ... [Q-learning](https://en.wikipedia.org/wiki/Q-learning)! Using our structure2vec representation of a graph embedding, we can create an *evaluation function* $Q$ which is analogous to a heurstic function in a standard greedy approach. This function will be learned through [reinforcement learning](https://en.wikipedia.org/wiki/Reinforcement_learning) on many graph instances, without having example optimal solutions. The purpose of the function is to take in a partially constructed solution and a proposed node in the graph that is not already in the partial solution, and return some measure of the quality this node would add to our solution. Then we can use the standard greedy approach and simply pick the node that maximizes our evaluation function.
+In comes ... [Q-learning](https://en.wikipedia.org/wiki/Q-learning)! Using our structure2vec representation of a graph embedding, we can create an *evaluation function* $Q$ which is analogous to a heuristic function in a standard greedy approach. This function will be learned through reinforcement learning on many graph instances, without having example optimal solutions. The purpose of the function is to take in a partially constructed solution and a proposed node in the graph that is not already in the partial solution, and return some measure of the quality this node would add to our solution. Then we can use the standard greedy approach and simply pick the node that maximizes our evaluation function.
+
+![Greedy Node Addition](./blog_images/blog_combopt/greedy.png "Greedy Node Addition")
 
 This naturally brings up a few questions:
 1. How can we specify to our learning algorithm the constraints of our particular optimization problem?
@@ -90,6 +92,6 @@ Wew, that was a lot of background. This entire paradigm is called Structure2Vec 
 
 Previous work done in machine learning based combinatorial optimization has been too restrictive for both scalability and application to a variety of problems. This network architecture in this novel method is general enough to be applied to different types of graph problems, and captures more of the combinatorial structure of the underlying graph compared to previous methods which used standard network architectures. Capturing the combinatorial structure by using the graph embedding also comes with the added benefit of scalability to larger graphs; whereas previous approaches needed to tailor the size of their input to match that of the network.
 
-Another benefit comes from the process of $n$-step learning, allowing the evaluation function $Q$ to directly train on the objective function of the optimization problem, while still being able to account for delayed rewards that are not obvious to a standard greedy heurstic. Additionally, improved benefit is derived from the usage of experience replay, creating training samples with respect to the potential benefit of each node rather than the entire solution, allowing for many more sample instances to train on compared to a standard policy gradient approach, which only performs an update based on the entire solution.
+Another benefit comes from the process of $n$-step learning, allowing the evaluation function $Q$ to directly train on the objective function of the optimization problem, while still being able to account for delayed rewards that are not obvious to a standard greedy heuristic. Additionally, improved benefit is derived from the usage of experience replay, creating training samples with respect to the potential benefit of each node rather than the entire solution, allowing for many more sample instances to train on compared to a standard policy gradient approach, which only performs an update based on the entire solution.
 
 These benefits are not just theoretical, the results speak for themselves! S2V-DQN was tested on TSP, MAXCUT, and MVC, and was even able to find a more optimal solution than a neural network based algorithm which was specifically designed to solve TSP; let alone being able to find near optimal solution for all 3 problems. The benefits don't stop there; the algorithm was empirically able to find near optimal solutions for graph sizes over 10 times larger than graphs it was trained on, and was able to do so slightly faster compared to other problem-specific algorithms which found similarly optimal solutions.
