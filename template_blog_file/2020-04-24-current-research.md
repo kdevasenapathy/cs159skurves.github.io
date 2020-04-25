@@ -8,7 +8,7 @@ tags:
 ---
 
 
-# Explanation of Current Research
+## Explanation of Current Research
 
 The current research aims to make a general algorithm that can learn to solve all types of different graph optimization problems, since many of these problems have a similar underlying structure.
 
@@ -25,7 +25,7 @@ This naturally brings up a few questions:
 
 We'll tackle these questions one at a time.
 
-### Specifying a problem
+### Specifying a Problem
 
 First, for any graph optimization problem, we can represent an instance of the problem as a graph $G$, which has a vertex set $V$, an edge set $E$, and a weight function $w : (V, V) \to \mathbb{R}$ where the input is a pair of vertices $(u, v) \in E$.
 
