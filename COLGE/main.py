@@ -38,6 +38,7 @@ parser.add_argument('--m',default=4,help="m, parameter in graph degree distribut
 parser.add_argument('--batch', type=int, metavar='nagent', default=None, help='batch run several agent at the same time')
 parser.add_argument('--verbose', action='store_true', default=True, help='Display cumulative results at each step')
 parser.add_argument('--path', type=str, default='', metavar='path', help='Folder location of where to save results')
+parser.add_argument('--hide_opt', action='store_true', default=False, help='Whether to calculate the optimal solution during of instances during training')
 
 def main():
     args = parser.parse_args()
@@ -64,7 +65,7 @@ def main():
         agent_class.save_model()
     else:
         print("Running a single instance simulation...")
-        my_runner = runner.Runner(env_class, agent_class, args.path, args.verbose)
+        my_runner = runner.Runner(env_class, agent_class, args.path, args.verbose, args.hide_opt)
         final_reward = my_runner.loop(args.ngames,args.epoch, args.niter)
         print("Obtained a final reward of {}".format(final_reward))
         agent_class.save_model()
