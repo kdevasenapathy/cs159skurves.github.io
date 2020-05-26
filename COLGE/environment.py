@@ -332,6 +332,32 @@ class Environment:
 
             # INDEPENDENT SET
             elif self.name=="MIS":
+                nodes = list(range(self.graph_init.g.number_of_nodes()))
+                nv = pulp.LpVariable.dicts('is_opti', nodes,
+                                                           lowBound=0,
+                                                           upBound=1,
+                                                           cat=pulp.LpInteger)
+
+                # LP problem
+                mdl = pulp.LpProblem("MAX_INDEPENDENT_SET", pulp.LpMaximize)
+
+                 # Objective function: size of clique
+                 mdl += sum(nv[k] for k in nv)
+
+                 # Constraint: No two nodes in the clique should be connected,
+                 # which we enforce using the graph's edges
+                 for e in self.graph_init.g:
+                     mdl += (nv[e[0]] + nv[e[1]] <= 1)
+
+                 # Find and return size of optimal (largest) clique
+                 mdl.solve()
+
+                 optimal = 0
+                 for n in nv:
+                     optimal += nv[n].value()
+
+                  self.opt_sol[self.games] = optimal
+                  return optimal
 
 
 
