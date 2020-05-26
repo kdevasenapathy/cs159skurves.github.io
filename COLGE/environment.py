@@ -18,6 +18,8 @@ in which the agents are run.
 class Environment:
     def __init__(self, graph,name):
         self.graphs = graph
+        self.approx_sol = [None for i in range(len(graph))]
+        self.opt_sol = [None for i in range(len(graph))]
         self.name= name
 
     def reset(self, g):
@@ -159,121 +161,140 @@ class Environment:
 
 
     def get_approx(self):
+        
+        if self.approx_sol[self.games] is None:
 
-        if self.name=="MVC":
-            cover_edge=[]
-            edges= list(self.graph_init.edges())
-            while len(edges)>0:
-                edge = edges[np.random.choice(len(edges))]
-                cover_edge.append(edge[0])
-                cover_edge.append(edge[1])
-                to_remove=[]
-                for edge_ in edges:
-                    if edge_[0]==edge[0] or edge_[0]==edge[1]:
-                        to_remove.append(edge_)
-                    else:
-                        if edge_[1]==edge[1] or edge_[1]==edge[0]:
+            if self.name=="MVC":
+                cover_edge=[]
+                edges= list(self.graph_init.edges())
+                while len(edges)>0:
+                    edge = edges[np.random.choice(len(edges))]
+                    cover_edge.append(edge[0])
+                    cover_edge.append(edge[1])
+                    to_remove=[]
+                    for edge_ in edges:
+                        if edge_[0]==edge[0] or edge_[0]==edge[1]:
                             to_remove.append(edge_)
-                for i in to_remove:
-                    edges.remove(i)
-            return len(cover_edge)
+                        else:
+                            if edge_[1]==edge[1] or edge_[1]==edge[0]:
+                                to_remove.append(edge_)
+                    for i in to_remove:
+                        edges.remove(i)
+                self.approx_sol[self.games] = len(cover_edge)
+                return len(cover_edge)
 
-        elif self.name=="MAXCUT":
-            return 1
-        elif self.name=="MFVS":
-            return self.graph_init.nodes()
-        elif self.name=="MAX_CLIQUE":
-            return len(max_clique(self.graph_init.g))
+            elif self.name=="MAXCUT":
+                self.approx_sol[self.games] = 1
+                return 1
+            elif self.name=="MFVS":
+                self.approx_sol[self.games] = self.graph_init.nodes()
+                return self.graph_init.nodes()
+            elif self.name=="MAX_CLIQUE":
+                self.approx_sol[self.games] = len(max_clique(self.graph_init.g))
+                return len(max_clique(self.graph_init.g))
+            else:
+                return 'you pass a wrong environment name'
+                
         else:
-            return 'you pass a wrong environment name'
+            return self.approx_sol[self.games]
 
     def get_optimal_sol(self):
 
-        if self.name =="MVC":
+        if self.opt_sol[self.games] is None:
 
-            x = list(range(self.graph_init.g.number_of_nodes()))
-            xv = pulp.LpVariable.dicts('is_opti', x,
-                                       lowBound=0,
-                                       upBound=1,
-                                       cat=pulp.LpInteger)
+            if self.name =="MVC":
 
-            mdl = pulp.LpProblem("MVC", pulp.LpMinimize)
+                x = list(range(self.graph_init.g.number_of_nodes()))
+                xv = pulp.LpVariable.dicts('is_opti', x,
+                                           lowBound=0,
+                                           upBound=1,
+                                           cat=pulp.LpInteger)
 
-            mdl += sum(xv[k] for k in xv)
+                mdl = pulp.LpProblem("MVC", pulp.LpMinimize)
 
-            for edge in self.graph_init.edges():
-                mdl += xv[edge[0]] + xv[edge[1]] >= 1, "constraint :" + str(edge)
-            mdl.solve()
+                mdl += sum(xv[k] for k in xv)
 
-            #print("Status:", pulp.LpStatus[mdl.status])
-            optimal=0
-            for x in xv:
-                optimal += xv[x].value()
-                #print(xv[x].value())
-            return optimal
+                for edge in self.graph_init.edges():
+                    mdl += xv[edge[0]] + xv[edge[1]] >= 1, "constraint :" + str(edge)
+                mdl.solve()
 
-        elif self.name=="MAXCUT":
+                #print("Status:", pulp.LpStatus[mdl.status])
+                optimal=0
+                for x in xv:
+                    optimal += xv[x].value()
+                    #print(xv[x].value())
+                self.opt_sol[self.games] = optimal
+                return optimal
 
-            x = list(range(self.graph_init.g.number_of_nodes()))
-            e = list(self.graph_init.edges())
-            xv = pulp.LpVariable.dicts('is_opti', x,
-                                       lowBound=0,
-                                       upBound=1,
-                                       cat=pulp.LpInteger)
-            ev = pulp.LpVariable.dicts('ev', e,
-                                       lowBound=0,
-                                       upBound=1,
-                                       cat=pulp.LpInteger)
+            elif self.name=="MAXCUT":
 
-            mdl = pulp.LpProblem("MVC", pulp.LpMaximize)
+                x = list(range(self.graph_init.g.number_of_nodes()))
+                e = list(self.graph_init.edges())
+                xv = pulp.LpVariable.dicts('is_opti', x,
+                                           lowBound=0,
+                                           upBound=1,
+                                           cat=pulp.LpInteger)
+                ev = pulp.LpVariable.dicts('ev', e,
+                                           lowBound=0,
+                                           upBound=1,
+                                           cat=pulp.LpInteger)
 
-            mdl += sum(ev[k] for k in ev)
+                mdl = pulp.LpProblem("MVC", pulp.LpMaximize)
 
-            for i in e:
-                mdl+= ev[i] <= xv[i[0]]+xv[i[1]]
+                mdl += sum(ev[k] for k in ev)
 
-            for i in e:
-                mdl+= ev[i]<= 2 -(xv[i[0]]+xv[i[1]])
+                for i in e:
+                    mdl+= ev[i] <= xv[i[0]]+xv[i[1]]
 
-            #pulp.LpSolverDefault.msg = 1
-            mdl.solve()
+                for i in e:
+                    mdl+= ev[i]<= 2 -(xv[i[0]]+xv[i[1]])
 
-            # print("Status:", pulp.LpStatus[mdl.status])
+                #pulp.LpSolverDefault.msg = 1
+                mdl.solve()
 
-            return mdl.objective.value()
+                # print("Status:", pulp.LpStatus[mdl.status])
 
-        elif self.name == "MFVS":
-            mif = MaximumInducedForest()
-            g = self.graph_init.get_graph()
-            g_copy = g.copy()
-            return max(len(mif.get_fbvs(g_copy)), 1)
+                self.opt_sol[self.games] = mdl.objective.value()
+                return mdl.objective.value()
 
-        elif self.name == "MAX_CLIQUE":
+            elif self.name == "MFVS":
+                mif = MaximumInducedForest()
+                g = self.graph_init.get_graph()
+                g_copy = g.copy()
+                optimal = max(len(mif.get_fbvs(g_copy)), 1)
+                
+                self.opt_sol[self.games] = optimal
+                return optimal
 
-            # LP variables
-            nodes = list(range(self.graph_init.g.number_of_nodes()))
-            nv = pulp.LpVariable.dicts('is_opti', nodes,
-                                       lowBound=0,
-                                       upBound=1,
-                                       cat=pulp.LpInteger)
+            elif self.name == "MAX_CLIQUE":
 
-            # LP problem
-            mdl = pulp.LpProblem("MAX_CLIQUE", pulp.LpMaximize)
+                # LP variables
+                nodes = list(range(self.graph_init.g.number_of_nodes()))
+                nv = pulp.LpVariable.dicts('is_opti', nodes,
+                                           lowBound=0,
+                                           upBound=1,
+                                           cat=pulp.LpInteger)
 
-            # Objective function: size of clique
-            mdl += sum(nv[k] for k in nv)
+                # LP problem
+                mdl = pulp.LpProblem("MAX_CLIQUE", pulp.LpMaximize)
 
-            # Constraint: No two nodes in the clique should be disconnected,
-            # which we enforce using the graph's complement's edges
-            com_edges = list(complement(self.graph_init.g).edges())
-            for e in com_edges:
-                mdl += (nv[e[0]] + nv[e[1]] <= 1)
+                # Objective function: size of clique
+                mdl += sum(nv[k] for k in nv)
 
-            # Find and return size of optimal (largest) clique
-            mdl.solve()
+                # Constraint: No two nodes in the clique should be disconnected,
+                # which we enforce using the graph's complement's edges
+                com_edges = list(complement(self.graph_init.g).edges())
+                for e in com_edges:
+                    mdl += (nv[e[0]] + nv[e[1]] <= 1)
 
-            optimal = 0
-            for n in nv:
-                optimal += nv[n].value()
+                # Find and return size of optimal (largest) clique
+                mdl.solve()
 
-            return optimal
+                optimal = 0
+                for n in nv:
+                    optimal += nv[n].value()
+
+                self.opt_sol[self.games] = optimal
+                return optimal
+        else:
+            return self.opt_sol[self.games]
