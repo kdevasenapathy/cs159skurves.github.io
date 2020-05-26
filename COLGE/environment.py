@@ -3,6 +3,8 @@ import torch
 import pulp
 import networkx as nx
 
+from networkx.algorithms.operators.unary import complement
+from networkx.algorithms.approximation.clique import max_clique
 from algorithms.feedbackVertex.maximum_induced_forest import MaximumInducedForest
 
 
@@ -34,6 +36,13 @@ class Environment:
         return self.observation
 
     def act(self,node):
+
+        if self.name == "MAX_CLIQUE":
+            clique = np.where(self.observation[0,:,0].numpy() == 1)[0]
+
+            for c in clique:
+                if not self.graph_init.g.has_edge(c, node):
+                    return (0, False)
 
         self.observation[:,node,:]=1
         reward = self.get_reward(self.observation, node)
@@ -120,6 +129,34 @@ class Environment:
 
             return (reward, done)
 
+        elif self.name == "MAX_CLIQUE":
+
+            # Check if there's at least one node not currently in the clique
+            # that is connected to all clique nodes, implying another node can
+            # be added.
+            clique = np.where(self.observation[0,:,0].numpy() == 1)[0]
+            rest   = np.where(self.observation[0,:,0].numpy() == 0)[0]
+            done = False
+
+            for n in rest:
+                done = False
+                for c in clique:
+                    if not self.graph_init.g.has_edge(c, n):
+                        done = True
+                        break
+                if not done:
+                    break
+
+            # # Reward that includes average degree of clique members
+            # reward = sum(self.graph_init.g.degree(c) for c in clique) \
+            #         / len(clique) + len(clique)
+            #
+            # change_reward = reward - self.last_reward
+            #
+            # self.last_reward = reward
+
+            return (1, done)
+
 
     def get_approx(self):
 
@@ -145,6 +182,8 @@ class Environment:
             return 1
         elif self.name=="MFVS":
             return self.graph_init.nodes()
+        elif self.name=="MAX_CLIQUE":
+            return len(max_clique(self.graph_init.g))
         else:
             return 'you pass a wrong environment name'
 
@@ -209,4 +248,32 @@ class Environment:
             g_copy = g.copy()
             return max(len(mif.get_fbvs(g_copy)), 1)
 
+        elif self.name == "MAX_CLIQUE":
 
+            # LP variables
+            nodes = list(range(self.graph_init.g.number_of_nodes()))
+            nv = pulp.LpVariable.dicts('is_opti', nodes,
+                                       lowBound=0,
+                                       upBound=1,
+                                       cat=pulp.LpInteger)
+
+            # LP problem
+            mdl = pulp.LpProblem("MAX_CLIQUE", pulp.LpMaximize)
+
+            # Objective function: size of clique
+            mdl += sum(nv[k] for k in nv)
+
+            # Constraint: No two nodes in the clique should be disconnected,
+            # which we enforce using the graph's complement's edges
+            com_edges = list(complement(self.graph_init.g).edges())
+            for e in com_edges:
+                mdl += (nv[e[0]] + nv[e[1]] <= 1)
+
+            # Find and return size of optimal (largest) clique
+            mdl.solve()
+
+            optimal = 0
+            for n in nv:
+                optimal += nv[n].value()
+
+            return optimal
