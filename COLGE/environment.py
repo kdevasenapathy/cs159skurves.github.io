@@ -330,6 +330,10 @@ class Environment:
                 self.opt_sol[self.games] = optimal
                 return optimal
 
-                
+            # INDEPENDENT SET
+            elif self.name=="MIS":
+
+
+
         else:
             return self.opt_sol[self.games]
