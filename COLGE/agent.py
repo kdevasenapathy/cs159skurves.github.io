@@ -4,6 +4,7 @@ import time
 import os
 import logging
 import models
+import pathlib
 from utils.config import load_model_config
 
 import torch.nn.functional as F
@@ -28,7 +29,7 @@ environment.
 class DQAgent:
 
 
-    def __init__(self,graph,model,lr,bs,n_step):
+    def __init__(self,graph,model,lr,bs,n_step, folder_path):
 
         self.graphs = graph
         self.embed_dim = 64
@@ -82,6 +83,9 @@ class DQAgent:
         self.T = 5
 
         self.t = 1
+        
+        current_path = pathlib.Path().absolute()
+        self.abs_folder_path = current_path / (folder_path + '/')
 
 
 
@@ -217,8 +221,9 @@ class DQAgent:
                     self.memory_n.append((step_init[0], step_init[1], cum_reward,self.memory[-1][-3], False, self.memory[-1][-1]))
 
     def save_model(self):
-        cwd = os.getcwd()
-        torch.save(self.model.state_dict(), cwd+'/model.pt')
+        #cwd = os.getcwd()
+        #torch.save(self.model.state_dict(), cwd+'/model.pt')
+        torch.save(self.model.state_dict(), self.abs_folder_path / 'model.pt')
 
 
 Agent = DQAgent

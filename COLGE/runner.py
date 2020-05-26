@@ -14,10 +14,11 @@ class Runner:
         self.agent = agent
         self.verbose = verbose
         self.hide_opt = hide_opt
-        self.relative_folder_path = folder_path
+        self.relative_folder_path = folder_path + '/'
         current_path = pathlib.Path().absolute()
-        abs_folder_path = current_path / folder_path
-        #print(abs_folder_path)
+        abs_folder_path = current_path / (folder_path + '/')
+        self.abs_folder_path = abs_folder_path
+        print(abs_folder_path)
         abs_folder_path.mkdir(parents=True, exist_ok=True)
 
     def step(self):
@@ -53,10 +54,10 @@ class Runner:
                         (obs, act, rew, done) = self.step()
                         cumul_reward += rew
                         if self.verbose:
-                            # print(" ->       observation: {}".format(obs))
-                            # print(" ->            action: {}".format(act))
-                            # print(" ->            reward: {}".format(rew))
-                            # print(" -> cumulative reward: {}".format(cumul_reward))
+                            #print(" ->       observation: {}".format(obs))
+                            #print(" ->            action: {}".format(act))
+                            #print(" ->            reward: {}".format(rew))
+                            #print(" -> cumulative reward: {}".format(cumul_reward))
                             if done:
                                 end_time = time.time()
 

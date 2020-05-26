@@ -52,7 +52,7 @@ def main():
         graph_dic[graph_]=graph.Graph(graph_type=args.graph_type, cur_n=args.node, p=args.p,m=args.m,seed=seed)
 
     logging.info('Loading agent...')
-    agent_class = agent.Agent(graph_dic, args.model, args.lr,args.bs,args.n_step)
+    agent_class = agent.Agent(graph_dic, args.model, args.lr,args.bs,args.n_step, args.path)
 
     logging.info('Loading environment %s' % args.environment_name)
     env_class = environment.Environment(graph_dic,args.environment_name)
