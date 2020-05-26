@@ -120,6 +120,26 @@ class Environment:
 
             return (reward, done)
 
+        # INDEPENDENT SET
+        #**************************************************************
+        elif self.name=="IS":
+            reward=1
+            done = False
+
+            # basically the anticlique
+            clique = np.where(self.observation[0,:,0].numpy() == 1)[0]
+            not_clique   = np.where(self.observation[0,:,0].numpy() == 0)[0]
+
+            # want to make sure that there is at least one node not connected
+            # to any of the other nodes we have selected
+
+            for next_node in not_clique:
+                for node in clique:
+                    if self.gra:
+
+            return (reward, done)
+
+
 
     def get_approx(self):
 
@@ -145,6 +165,10 @@ class Environment:
             return 1
         elif self.name=="MFVS":
             return self.graph_init.nodes()
+
+        #**************************************************************
+        elif self.name=="IS":
+            return 1
         else:
             return 'you pass a wrong environment name'
 
@@ -208,5 +232,10 @@ class Environment:
             g = self.graph_init.get_graph()
             g_copy = g.copy()
             return max(len(mif.get_fbvs(g_copy)), 1)
+
+        # INDEPENDENT SET
+        #**************************************************************
+         elif self.name=="IS":
+            return 0
 
 
