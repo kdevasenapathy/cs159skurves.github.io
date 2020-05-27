@@ -37,64 +37,79 @@ class Runner:
 
         for epoch_ in range(nbr_epoch):
             print(" -> epoch : "+str(epoch_))
+            
+            games_to_run = []
+            
             for g in range(1, games + 1):
-                print(" -> games : "+str(g))
-                self.environment.reset(g)
-                
                 for epoch in range(5):
-                    self.environment.reset(g)
-                    self.agent.reset(g)
-                    cumul_reward = 0.0
-                    
-                    start_time = time.time()
-                    
-                    for i in range(1, max_iter + 1):
-                        # if self.verbose:
-                        #   print("Simulation step {}:".format(i))
-                        (obs, act, rew, done) = self.step()
-                        cumul_reward += rew
-                        if self.verbose:
-                            #print(" ->       observation: {}".format(obs))
-                            #print(" ->            action: {}".format(act))
-                            #print(" ->            reward: {}".format(rew))
-                            #print(" -> cumulative reward: {}".format(cumul_reward))
-                            if done:
-                                end_time = time.time()
+                    games_to_run.append(g)
+            
+            np.random.shuffle(games_to_run)
+            #print(games_to_run)
+            num_games_ran = 0
+            
+            for g in games_to_run:
+                num_games_ran += 1
+                print(" -> Game: {} \tRunning graph: {} : ".format(num_games_ran, g))
+            
+            
+                self.environment.reset(g)
+                self.agent.reset(g)
+                cumul_reward = 0.0
+                
+                start_time = time.time()
+                
+                for i in range(1, max_iter + 1):
+                    # if self.verbose:
+                    #   print("Simulation step {}:".format(i))
+                    (obs, act, rew, done) = self.step()
+                    cumul_reward += rew
+                    if self.verbose:
+                        #print(" ->       observation: {}".format(obs))
+                        #print(" ->            action: {}".format(act))
+                        #print(" ->            reward: {}".format(rew))
+                        #print(" -> cumulative reward: {}".format(cumul_reward))
+                        if done:
+                            end_time = time.time()
 
+                            if not self.hide_opt:
+                                #solution from baseline algorithm
+                                approx_sol =self.environment.get_approx()
+
+                                #optimal solution
+                                optimal_sol = self.environment.get_optimal_sol()         
+                                
+                                #print optimal solution
+                                # print cumulative reward of one play, it is actually the solution found by the NN algorithm
+                                print(" ->    Terminal event: cumulative rewards = {}\t opt = {}\t opt_ratio = {}\tTook {} seconds".format(cumul_reward, optimal_sol, cumul_reward/optimal_sol, end_time-start_time))
+                                print('LEARNING RATE: {}\t EPSILON: {}'.format(self.agent.optimizer.param_groups[0]['lr'], self.agent.epsilon_))
+                                #we add in a list the ratio between the NN solution and the optimal solution
+                                list_optimal_ratio.append(cumul_reward/(optimal_sol))
+
+                                #we add in a list the ratio between the NN solution and the baseline solution
+                                list_aprox_ratio.append(cumul_reward/(approx_sol))
+                            else:
                                 # print cumulative reward of one play, it is actually the solution found by the NN algorithm
                                 print(" ->    Terminal event: cumulative rewards = {}\tTook {} seconds".format(cumul_reward, end_time-start_time))
+                            
+                            #we add in a list the solution found by the NN algorithm
+                            list_cumul_reward.append(-cumul_reward)
 
-                                if not self.hide_opt:
-                                    #solution from baseline algorithm
-                                    approx_sol =self.environment.get_approx()
+                            
 
-                                    #optimal solution
-                                    optimal_sol = self.environment.get_optimal_sol()         
-                                    
-                                    #print optimal solution
-                                    print(" ->    Optimal solution = {}".format(optimal_sol))
-
-                                    #we add in a list the ratio between the NN solution and the optimal solution
-                                    list_optimal_ratio.append(cumul_reward/(optimal_sol))
-
-                                    #we add in a list the ratio between the NN solution and the baseline solution
-                                    list_aprox_ratio.append(cumul_reward/(approx_sol))
-                                
-                                #we add in a list the solution found by the NN algorithm
-                                list_cumul_reward.append(-cumul_reward)
-
-                                
-
-                        if done:
-                            break
+                    if done:
+                        break
                 np.savetxt(self.relative_folder_path + 'test_'+str(epoch_)+'.out', list_optimal_ratio, delimiter=',')
                 np.savetxt(self.relative_folder_path + 'test_approx_' + str(epoch_) + '.out', list_aprox_ratio, delimiter=',')
+                np.savetxt(self.relative_folder_path + 'opt_set.out', list_optimal_ratio, delimiter=',')
 
-
-            if self.verbose:
-                print(" <=> Finished game number: {} <=>".format(g))
-                print("")
-
+            #if self.verbose:
+                #print(" <=> Finished game number: {} <=>".format(g))
+                #print("")
+                
+            self.agent.scheduler.step()
+            
+            
         np.savetxt(self.relative_folder_path + 'test.out', list_cumul_reward, delimiter=',')
         np.savetxt(self.relative_folder_path + 'opt_set.out', list_optimal_ratio, delimiter=',')
         #plt.plot(list_cumul_reward)

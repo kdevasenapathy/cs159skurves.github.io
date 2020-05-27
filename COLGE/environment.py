@@ -341,23 +341,23 @@ class Environment:
                 # LP problem
                 mdl = pulp.LpProblem("MAX_INDEPENDENT_SET", pulp.LpMaximize)
 
-                 # Objective function: size of clique
-                 mdl += sum(nv[k] for k in nv)
+                # Objective function: size of clique
+                mdl += sum(nv[k] for k in nv)
 
-                 # Constraint: No two nodes in the clique should be connected,
-                 # which we enforce using the graph's edges
-                 for e in self.graph_init.g:
-                     mdl += (nv[e[0]] + nv[e[1]] <= 1)
+                # Constraint: No two nodes in the clique should be connected,
+                # which we enforce using the graph's edges
+                for e in self.graph_init.g:
+                    mdl += (nv[e[0]] + nv[e[1]] <= 1)
 
-                 # Find and return size of optimal (largest) clique
-                 mdl.solve()
+                # Find and return size of optimal (largest) clique
+                mdl.solve()
 
-                 optimal = 0
-                 for n in nv:
-                     optimal += nv[n].value()
+                optimal = 0
+                for n in nv:
+                    optimal += nv[n].value()
 
-                  self.opt_sol[self.games] = optimal
-                  return optimal
+                self.opt_sol[self.games] = optimal
+                return optimal
 
 
 

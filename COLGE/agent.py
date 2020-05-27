@@ -29,7 +29,7 @@ environment.
 class DQAgent:
 
 
-    def __init__(self,graph,model,lr,bs,n_step, folder_path):
+    def __init__(self,graph,model,lr,bs,n_step, gamma, lr_decay, folder_path):
 
         self.graphs = graph
         self.embed_dim = 64
@@ -43,7 +43,7 @@ class DQAgent:
 
         self.epsilon_=1
         self.epsilon_min=0.02
-        self.discount_factor =0.999990
+        self.discount_factor = gamma
         #self.eps_end=0.02
         #self.eps_start=1
         #self.eps_step=20000
@@ -79,6 +79,7 @@ class DQAgent:
 
         self.criterion = torch.nn.MSELoss(reduction='sum')
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=lr)
+        self.scheduler = torch.optim.lr_scheduler.LambdaLR(self.optimizer, lr_lambda = lambda epoch : lr_decay ** epoch)
 
         self.T = 5
 
