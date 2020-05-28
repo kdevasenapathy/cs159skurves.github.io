@@ -29,7 +29,7 @@ environment.
 class DQAgent:
 
 
-    def __init__(self,graph,model,lr,bs,n_step, gamma, lr_decay, folder_path):
+    def __init__(self,graph,model,lr,bs,n_step, discount_factor, lr_decay, folder_path):
 
         self.graphs = graph
         self.embed_dim = 64
@@ -37,16 +37,16 @@ class DQAgent:
 
         self.k = 20
         self.alpha = 0.1
-        self.gamma = 0.99
+        self.gamma = 1#0.99
         self.lambd = 0.
         self.n_step=n_step
 
         self.epsilon_=1
-        self.epsilon_min=0.02
-        self.discount_factor = gamma
+        self.epsilon_min=0.05
+        self.discount_factor = discount_factor
         #self.eps_end=0.02
-        #self.eps_start=1
-        #self.eps_step=20000
+        self.epsilon_start=1
+        self.epsilon_step=60000
         self.t=1
         self.memory = []
         self.memory_n=[]
@@ -148,9 +148,9 @@ class DQAgent:
             self.optimizer.step()
             #print(self.t, loss)
 
-            #self.epsilon = self.eps_end + max(0., (self.eps_start- self.eps_end) * (self.eps_step - self.t) / self.eps_step)
-            if self.epsilon_ > self.epsilon_min:
-               self.epsilon_ *= self.discount_factor
+            self.epsilon_ = self.epsilon_min + max(0., (self.epsilon_start- self.epsilon_min) * (self.epsilon_step - self.t) / self.epsilon_step)
+            #if self.epsilon_ > self.epsilon_min:
+               #self.epsilon_ *= self.discount_factor
         if self.iter>1:
             self.remember(self.last_observation, self.last_action, self.last_reward, observation.clone(),self.last_done*1)
 
