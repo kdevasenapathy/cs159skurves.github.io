@@ -346,7 +346,7 @@ class Environment:
 
                 # Constraint: No two nodes in the clique should be connected,
                 # which we enforce using the graph's edges
-                for e in self.graph_init.g:
+                for e in list(self.graph_init.g):
                     mdl += (nv[e[0]] + nv[e[1]] <= 1)
 
                 # Find and return size of optimal (largest) clique
