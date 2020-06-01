@@ -138,7 +138,7 @@ class Environment:
             not_touching = True
 
             # basically the anticlique
-            clique = np.where(self.observation[0,:,0].numpy() == 1)[0]
+            clique       = np.where(self.observation[0,:,0].numpy() == 1)[0]
             not_clique   = np.where(self.observation[0,:,0].numpy() == 0)[0]
 
             # want to make sure that there is at least one node not connected
@@ -346,7 +346,7 @@ class Environment:
 
                 # Constraint: No two nodes in the clique should be connected,
                 # which we enforce using the graph's edges
-                for e in list(self.graph_init.g):
+                for e in list(self.graph_init.g.edges()):
                     mdl += (nv[e[0]] + nv[e[1]] <= 1)
 
                 # Find and return size of optimal (largest) clique
