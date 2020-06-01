@@ -136,23 +136,20 @@ class Environment:
         # basically the anticlique
 
         elif self.name=="MIS":
-        	# want to make sure that there is at least one node not connected
+            # want to make sure that there is at least one node not connected
             # to any of the other nodes we have selected
             clique = np.where(self.observation[0,:,0].numpy() == 1)[0]
             rest   = np.where(self.observation[0,:,0].numpy() == 0)[0]
-            done = False 
+            done = False
 
-            for n in rest: # the nodes we have not selected yet 
+            for n in rest:
                 done = False
-                for c in clique: # the nodes we have selected already
-                    if self.graph_init.g.has_edge(c, n): # if there's an edge to this node then we cannot use it
+                for c in clique:
+                    if self.graph_init.g.has_edge(c, n):
                         done = True
-                        break # but we know this is not a good node so we skip it. 
-        		
-        		# when we find one that didn't connect to any of them, 
-        		# done will still be false and we have a possible node
-        		if not done:
-        			break
+                        break
+                if not done:
+                    break
 
             return (1, done)
 
