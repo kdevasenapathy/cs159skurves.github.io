@@ -133,31 +133,28 @@ class Environment:
             return (reward, done)
 
         # INDEPENDENT SET
+        # basically the anticlique
+
         elif self.name=="MIS":
-            reward=1
-            not_touching = True
-
-            # basically the anticlique
-            clique       = np.where(self.observation[0,:,0].numpy() == 1)[0]
-            not_clique   = np.where(self.observation[0,:,0].numpy() == 0)[0]
-
-            # want to make sure that there is at least one node not connected
+        	# want to make sure that there is at least one node not connected
             # to any of the other nodes we have selected
+            clique = np.where(self.observation[0,:,0].numpy() == 1)[0]
+            rest   = np.where(self.observation[0,:,0].numpy() == 0)[0]
+            done = False 
 
-            for next_node in not_clique:
-                not_touching = True
-                for node in clique:
-                    if self.graph_init.g.has_edge(next_node, node):
-                    # if the node is touching a node in the clique we can't
-                    # choose it so we move on and reset
-                        not_touching = False
-                        break
-                if not_touching:
-                    # we have found a node that doesn't touch any in the clique
-                    break
+            for n in rest: # the nodes we have not selected yet 
+                done = False
+                for c in clique: # the nodes we have selected already
+                    if self.graph_init.g.has_edge(c, n): # if there's an edge to this node then we cannot use it
+                        done = True
+                        break # but we know this is not a good node so we skip it. 
+        		
+        		# when we find one that didn't connect to any of them, 
+        		# done will still be false and we have a possible node
+        		if not done:
+        			break
 
-
-            return (reward, not_touching)
+            return (1, done)
 
 
         elif self.name == "MAX_CLIQUE":
