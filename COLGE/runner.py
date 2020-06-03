@@ -81,7 +81,7 @@ class Runner:
                                 
                                 #print optimal solution
                                 # print cumulative reward of one play, it is actually the solution found by the NN algorithm
-                                print(" ->    Terminal event: cumulative rewards = {}\t opt = {}\t opt_ratio = {}\tTook {} seconds".format(cumul_reward, optimal_sol, cumul_reward/optimal_sol, end_time-start_time))
+                                print(" ->    Terminal event: cumulative rewards = {}\t opt = {}\t opt_ratio = {}\tTook {} seconds".format(cumul_reward, optimal_sol, max(cumul_reward/optimal_sol, optimal_sol/cumul_reward), end_time-start_time) )
                                 print('LEARNING RATE: {}\t EPSILON: {}'.format(self.agent.optimizer.param_groups[0]['lr'], self.agent.epsilon_))
                                 #we add in a list the ratio between the NN solution and the optimal solution
                                 list_optimal_ratio.append(cumul_reward/(optimal_sol))
