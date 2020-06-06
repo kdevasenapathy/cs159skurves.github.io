@@ -34,7 +34,7 @@ parser.add_argument('--bs',type=int,default=32,help="minibatch size for training
 parser.add_argument('--n_step',type=int, default=3,help="n step in RL")
 parser.add_argument('--node', type=int, metavar='nnode',default=20, help="number of node in generated graphs")
 parser.add_argument('--p',default=0.14,help="p, parameter in graph degree distribution", type=float)
-parser.add_argument('--m',default=4,help="m, parameter in graph degree distribution")
+parser.add_argument('--m',default=4, type=int, help="m, parameter in graph degree distribution")
 parser.add_argument('--batch', type=int, metavar='nagent', default=None, help='batch run several agent at the same time')
 parser.add_argument('--verbose', action='store_true', default=True, help='Display cumulative results at each step')
 parser.add_argument('--path', type=str, default='', metavar='path', help='Folder location of where to save results')
