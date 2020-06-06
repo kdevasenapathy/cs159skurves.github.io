@@ -41,6 +41,10 @@ parser.add_argument('--path', type=str, default='', metavar='path', help='Folder
 parser.add_argument('--hide_opt', action='store_true', default=False, help='Whether to calculate the optimal solution during of instances during training')
 parser.add_argument('--gamma', type=float, default=0.99999, help='Discount factor')
 parser.add_argument('--lr_decay', type=float, default=0.5, help='Learning rate decay factor for learning rate scheduler')
+parser.add_argument('--load_model', action='store_true', default=False, help='Whether to load a previously computed model')
+parser.add_argument('--nvalid', type=int, default='50', help='number of graphs to use for the validation set')
+parser.add_argument('--valid', action='store_true', default=False, help='Whether to just test the performance of the network, ideally used with loading the model')
+
 def main():
     args = parser.parse_args()
     logging.info('Loading graph %s' % args.graph_type)
@@ -53,7 +57,7 @@ def main():
         graph_dic[graph_]=graph.Graph(graph_type=args.graph_type, cur_n=args.node, p=args.p,m=args.m,seed=seed)
 
     logging.info('Loading agent...')
-    agent_class = agent.Agent(graph_dic, args.model, args.lr,args.bs,args.n_step, args.gamma, args.lr_decay, args.path)
+    agent_class = agent.Agent(graph_dic, args.model, args.lr,args.bs,args.n_step, args.gamma, args.lr_decay, args.path, args.load_model)
 
     logging.info('Loading environment %s' % args.environment_name)
     env_class = environment.Environment(graph_dic,args.environment_name)
@@ -66,10 +70,14 @@ def main():
         agent_class.save_model()
     else:
         print("Running a single instance simulation...")
-        my_runner = runner.Runner(env_class, agent_class, args.path, args.verbose, args.hide_opt)
-        final_reward = my_runner.loop(args.ngames,args.epoch, args.niter)
-        print("Obtained a final reward of {}".format(final_reward))
-        agent_class.save_model()
+        my_runner = runner.Runner(env_class, agent_class, args.path, args.verbose, args.hide_opt, args.nvalid)
+        if args.valid:
+            print("Testing a validation set...")
+            my_runner.valid_loop(args.nvalid, args.niter)
+        else:
+            final_reward = my_runner.loop(args.ngames,args.epoch, args.niter)
+            print("Obtained a final reward of {}".format(final_reward))
+            agent_class.save_model()
 
 
 

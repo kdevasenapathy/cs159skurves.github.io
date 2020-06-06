@@ -29,7 +29,7 @@ environment.
 class DQAgent:
 
 
-    def __init__(self,graph,model,lr,bs,n_step, discount_factor, lr_decay, folder_path):
+    def __init__(self,graph,model,lr,bs,n_step, discount_factor, lr_decay, folder_path, load_model=False):
 
         self.graphs = graph
         self.embed_dim = 64
@@ -76,6 +76,7 @@ class DQAgent:
 
             args_init = load_model_config()[self.model_name]
             self.model = models.W2V_QN(G=self.graphs[self.games], **args_init)
+            
 
         self.criterion = torch.nn.MSELoss(reduction='sum')
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=lr)
@@ -88,7 +89,8 @@ class DQAgent:
         current_path = pathlib.Path().absolute()
         self.abs_folder_path = current_path / (folder_path + '/')
 
-
+        if load_model:
+            self.model.load_state_dict(torch.load(self.abs_folder_path / 'model.pt'))
 
 
     """
@@ -121,19 +123,19 @@ class DQAgent:
 
 
 
-    def act(self, observation):
+    def act(self, observation, validation=False):
 
 
-        if self.epsilon_ > np.random.rand():
+        if self.epsilon_ > np.random.rand() and not validation:
             return np.random.choice(np.where(observation.numpy()[0,:,0] == 0)[0])
         else:
             q_a = self.model(observation, self.adj)
             q_a=q_a.detach().numpy()
             return np.where((q_a[0, :, 0] == np.max(q_a[0, :, 0][observation.numpy()[0, :, 0] == 0])))[0][0]
 
-    def reward(self, observation, action, reward,done):
+    def reward(self, observation, action, reward,done, validation=False):
 
-        if len(self.memory_n) > self.minibatch_length + self.n_step: #or self.games > 2:
+        if len(self.memory_n) > self.minibatch_length + self.n_step and not validation: #or self.games > 2:
 
             (last_observation_tens, action_tens, reward_tens, observation_tens, done_tens,adj_tens) = self.get_sample()
             target = reward_tens + self.gamma *(1-done_tens)*torch.max(self.model(observation_tens, adj_tens) + observation_tens * (-1e5), dim=1)[0]
