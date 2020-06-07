@@ -9,7 +9,7 @@ import pathlib
 import time
 
 class Runner:
-    def __init__(self, environment, agent, folder_path, verbose=False, hide_opt=False):
+    def __init__(self, environment, agent, folder_path, verbose=False, hide_opt=False, n_valid=50):
         self.environment = environment
         self.agent = agent
         self.verbose = verbose
@@ -21,12 +21,67 @@ class Runner:
         print(abs_folder_path)
         abs_folder_path.mkdir(parents=True, exist_ok=True)
 
-    def step(self):
+    def step(self, validation=False):
         observation = self.environment.observe().clone()
-        action = self.agent.act(observation).copy()
+        action = self.agent.act(observation, validation=validation).copy()
         (reward, done) = self.environment.act(action)
-        self.agent.reward(observation, action, reward,done)
+        self.agent.reward(observation, action, reward,done, validation=validation)
         return (observation, action, reward, done)
+        
+    def valid_loop(self, games, max_iter, save_file=True):
+        
+        games_to_run = []
+        
+        list_cumul_reward=[]
+        list_optimal_ratio = []
+        list_aprox_ratio = []
+        
+        num_avail_graphs = self.environment.get_number_of_stored_graphs()
+        for g in range(num_avail_graphs - 1, num_avail_graphs -1 - games, -1):
+            games_to_run.append(g)
+        
+        np.random.shuffle(games_to_run)
+        
+        num_games_ran = 0
+        
+        for g in games_to_run:
+            num_games_ran += 1
+            print(" -> Validation Game: {} \tRunning graph: {} : ".format(num_games_ran, g))
+     
+            self.environment.reset(g)
+            self.agent.reset(g)
+            cumul_reward = 0.0
+            
+            start_time = time.time()
+            
+            for i in range(1, max_iter + 1):
+                (obs, act, rew, done) = self.step(validation=True)
+                cumul_reward += rew
+                
+                if self.verbose and done:
+                    end_time = time.time()
+                    if not self.hide_opt:
+                        approx_sol =self.environment.get_approx()
+                        optimal_sol = self.environment.get_optimal_sol()         
+                        
+                        approx_ratio = max(abs(approx_sol/cumul_reward), abs(cumul_reward/approx_sol))
+                        opt_ratio = max(abs(optimal_sol/cumul_reward), abs(cumul_reward/optimal_sol))
+                        
+                        print(" ->    Terminal event: cumulative rewards = {}\t opt = {}\t opt_ratio = {}\tTook {} seconds".format(cumul_reward, optimal_sol, opt_ratio, end_time-start_time))
+                       
+                        list_optimal_ratio.append(opt_ratio)
+                        list_aprox_ratio.append(approx_ratio)
+                    else:
+                        # print cumulative reward of one play, it is actually the solution found by the NN algorithm
+                        print(" ->    Terminal event: cumulative rewards = {}\tTook {} seconds".format(cumul_reward, end_time-start_time))
+                    
+                    #we add in a list the solution found by the NN algorithm
+                    list_cumul_reward.append(-cumul_reward)
+                    
+                if done:
+                    break
+            if save_file:
+                np.savetxt(self.relative_folder_path + 'valid_set.out', list_optimal_ratio, delimiter=',')
 
     def loop(self, games,nbr_epoch, max_iter):
 

@@ -37,6 +37,9 @@ class Environment:
                  of the environment, if applicable.
         """
         return self.observation
+        
+    def get_number_of_stored_graphs(self):
+        return len(self.graphs)
 
     def act(self,node):
 
